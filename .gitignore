@@ -1,4 +1,4 @@
 # ignoring compilation artifacts
 sensortag/.metadata/*
-sensortag/sensortag_cc2650stk_stack/FlashROM/*/*.obj
-sensortag/sensortag_cc2650stk_stack/FlashROM/*/*/*.obj
+sensortag/sensortag_cc2650stk_stack/FlashROM/**/*.obj
+sensortag/sensortag_cc2650stk_stack/FlashROM/**/*.out
