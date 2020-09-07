@@ -41,7 +41,7 @@ else {
 
 var thisObj = {
     cfg:        'C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/config/app_ble.cfg',
-    outputPath: 'C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/app/FlashROM/configPkg',
+    outputPath: 'C:/Users/adeel/OneDrive/Documents/repos/TimeSync/sensortag/sensortag_cc2650stk_app/FlashROM/configPkg',
     exeName:    'app_ble' + suffix,
     exeIntName: 'app_ble' + suffix.replace('.', '_'),
     targ:       targ,

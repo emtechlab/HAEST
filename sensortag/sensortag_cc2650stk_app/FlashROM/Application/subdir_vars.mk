@@ -106,7 +106,6 @@ OBJS__QUOTED += \
 C_SRCS__QUOTED += \
 "C:/ti/simplelink/ble_sdk_2_02_01_18/src/examples/sensortag/cc26xx/app/gptimer.c" \
 "C:/ti/simplelink/ble_sdk_2_02_01_18/src/examples/sensortag/cc26xx/app/ntp.c" \
-"C:/ti/simplelink/ble_sdk_2_02_01_18/src/examples/sensortag/cc26xx/app/sensortag.c" \
 "C:/ti/simplelink/ble_sdk_2_02_01_18/src/examples/sensortag/cc26xx/app/sensortag_audio.c" \
 "C:/ti/simplelink/ble_sdk_2_02_01_18/src/examples/sensortag/cc26xx/app/sensortag_bar.c" \
 "C:/ti/simplelink/ble_sdk_2_02_01_18/src/examples/sensortag/cc26xx/app/sensortag_batt.c" \

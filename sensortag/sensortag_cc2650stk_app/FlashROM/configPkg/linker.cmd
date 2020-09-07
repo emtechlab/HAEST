@@ -9,7 +9,7 @@
  */
 
 
--l"C:\ti\simplelink\ble_sdk_2_02_01_18\examples\cc2650stk\sensortag\ccs\app\FlashROM\configPkg\package\cfg\app_ble_pem3.oem3"
+-l"C:\Users\adeel\OneDrive\Documents\repos\TimeSync\sensortag\sensortag_cc2650stk_app\FlashROM\configPkg\package\cfg\app_ble_pem3.oem3"
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/mw/display/lib/display.aem3"
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/mw/lcd/lib/lcd.aem3"
 -l"C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/mw/grlib/lib/grlib.aem3"

@@ -219,7 +219,7 @@ pre-build:
 
 post-build:
 	-C:/ti/ccsv6/tools/compiler/arm_15.12.3.LTS/bin/armhex -order MS --memwidth=8 --romwidth=8 --intel -o sensortag_cc2650stk_stack.hex sensortag_cc2650stk_stack.out
-	-C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/stack/../../../../../tools/frontier/frontier.exe ccs C:/Users/adeel/OneDrive/workspace_git/sensortag_cc2650stk_stack/FlashROM/sensortag_cc2650stk_stack_linkInfo.xml C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/stack/../config/ccs_compiler_defines.bcfg C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/stack/../config/ccs_linker_defines.cmd
+	-C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/stack/../../../../../tools/frontier/frontier.exe ccs C:/Users/adeel/OneDrive/Documents/repos/TimeSync/sensortag/sensortag_cc2650stk_stack/FlashROM/sensortag_cc2650stk_stack_linkInfo.xml C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/stack/../config/ccs_compiler_defines.bcfg C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/stack/../config/ccs_linker_defines.cmd
 	-@echo ' '
 
 .PHONY: all clean dependents

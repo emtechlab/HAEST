@@ -7,5 +7,5 @@
 #       or equal to the generated config header
 #
 linker.cmd: package/cfg/app_ble_pem3.xdl
-	$(SED) 's"^\"\(package/cfg/app_ble_pem3cfg.cmd\)\"$""\"C:/ti/simplelink/ble_sdk_2_02_01_18/examples/cc2650stk/sensortag/ccs/app/FlashROM/configPkg/\1\""' package/cfg/app_ble_pem3.xdl > $@
+	$(SED) 's"^\"\(package/cfg/app_ble_pem3cfg.cmd\)\"$""\"C:/Users/adeel/OneDrive/Documents/repos/TimeSync/sensortag/sensortag_cc2650stk_app/FlashROM/configPkg/\1\""' package/cfg/app_ble_pem3.xdl > $@
 	-$(SETDATE) -r:max package/cfg/app_ble_pem3.h compiler.opt compiler.opt.defs

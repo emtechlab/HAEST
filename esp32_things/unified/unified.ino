@@ -16,8 +16,8 @@
 
 // put sensors to be included here
 //#undef EXCLUDE_AUDIO
-//#undef EXCLUDE_IMU
-#undef EXCLUDE_MOTION
+#undef EXCLUDE_IMU
+//#undef EXCLUDE_MOTION
 //#undef EXCLUDE_RSSI
    
 // definitions
@@ -612,7 +612,7 @@ void setup(){
   void intImuTask(void * parameter){
     timer2 = timerBegin(2, 80, true);
     timerAttachInterrupt(timer2, &onTimerImu, true);
-    timerAlarmWrite(timer2, 1000, true);
+    timerAlarmWrite(timer2, 5000, true);
     timerAlarmEnable(timer2);
 
     vTaskSuspend(NULL);

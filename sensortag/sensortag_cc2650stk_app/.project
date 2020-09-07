@@ -269,22 +269,22 @@
 		<link>
 			<name>Drivers/PDMCC26XX.c</name>
 			<type>1</type>
-			<locationURI>PARENT-4-WORKSPACE_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX.c</locationURI>
+			<locationURI>PARENT-8-PROJECT_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/PDMCC26XX.h</name>
 			<type>1</type>
-			<locationURI>PARENT-4-WORKSPACE_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX.h</locationURI>
+			<locationURI>PARENT-8-PROJECT_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX.h</locationURI>
 		</link>
 		<link>
 			<name>Drivers/PDMCC26XX_util.c</name>
 			<type>1</type>
-			<locationURI>PARENT-4-WORKSPACE_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX_util.c</locationURI>
+			<locationURI>PARENT-8-PROJECT_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX_util.c</locationURI>
 		</link>
 		<link>
 			<name>Drivers/PDMCC26XX_util.h</name>
 			<type>1</type>
-			<locationURI>PARENT-4-WORKSPACE_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX_util.h</locationURI>
+			<locationURI>PARENT-8-PROJECT_LOC/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/drivers/pdm/PDMCC26XX_util.h</locationURI>
 		</link>
 		<link>
 			<name>Drivers/PIN</name>
