@@ -1,2 +1,3 @@
 # ignoring compilation artifacts
-sensortag/sensortag_cc2650stk_stack/FlashROM/
+sensortag/.metadata/*
+sensortag/sensortag_cc2650stk_stack/FlashROM/*
