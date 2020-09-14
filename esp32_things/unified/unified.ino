@@ -15,14 +15,15 @@
 #define EXCLUDE_IMU   // accelerometer and gyroscope only
 
 // put sensors to be included here
-//#undef EXCLUDE_AUDIO
-#undef EXCLUDE_IMU
+#undef EXCLUDE_AUDIO
+//#undef EXCLUDE_IMU
 //#undef EXCLUDE_MOTION
 //#undef EXCLUDE_RSSI
    
 // definitions
 #define USE_SERIAL Serial
 #define MIC_DATA 2
+#define MOT_DATA 3
 #define RSSI_DATA 9
 #define IMU_DATA 10
 
@@ -167,33 +168,34 @@ TaskHandle_t httpImu;
     if(countMotion%256 == 0){
       baseTimeMotion = tim64;
       //if(countMotion%256 <= 8){
-        motion_data[(countMotion/256)*3+MIC_DATA*countMotion] = motion;
-        motion_data[(countMotion/256)*3+MIC_DATA*countMotion+4] = tim64 & 0xFFFF;
-        motion_data[(countMotion/256)*3+MIC_DATA*countMotion+3] = (tim64>>16) & 0xFFFF;
-        motion_data[(countMotion/256)*3+MIC_DATA*countMotion+2] = (tim64>>32) & 0xFFFF;
-        motion_data[(countMotion/256)*3+MIC_DATA*countMotion+1] = (tim64>>48) & 0xFFFF;
+        motion_data[(countMotion/256)*2+MOT_DATA*countMotion] = motion;
+        motion_data[(countMotion/256)*2+MOT_DATA*countMotion+4] = tim64 & 0xFFFF;
+        motion_data[(countMotion/256)*2+MOT_DATA*countMotion+3] = (tim64>>16) & 0xFFFF;
+        motion_data[(countMotion/256)*2+MOT_DATA*countMotion+2] = (tim64>>32) & 0xFFFF;
+        motion_data[(countMotion/256)*2+MOT_DATA*countMotion+1] = (tim64>>48) & 0xFFFF;
       //}
 
     }else{
       tim64 = baseTimeMotion - tim64;
       //if(countMotion%256 <= 8){
-        motion_data[((countMotion/256)+1)*3+MIC_DATA*countMotion] = motion;
-        motion_data[((countMotion/256)+1)*3+MIC_DATA*countMotion+1] = (tim64) & 0xFFFF;
+        motion_data[((countMotion/256)+1)*2+MOT_DATA*countMotion] = motion;
+        motion_data[((countMotion/256)+1)*2+MOT_DATA*countMotion+2] = (tim64) & 0xFFFF;
+        motion_data[((countMotion/256)+1)*2+MOT_DATA*countMotion+1] = (tim64>>16) & 0xFFFF;
       //}
     }
     countMotion ++;
 
     //if(countMotion%200 == 0)
     //    USE_SERIAL.printf("Motion: %d\n", motion);
-    if(motion >= 670)
-        USE_SERIAL.printf("Motion: %d\n", motion);
-    if(countMotion%2000 == 0){
+    //if(motion >= 670)
+    //    USE_SERIAL.printf("Motion: %d\n", motion);
+    if(countMotion%500 == 0){
         USE_SERIAL.printf("Motion: %d\n", motion);
         memcpy(motion_http, motion_data, 8320);        
         motion_http[8319] = countMotionFrame;
         countMotion = 0;
         if(countMotionFrame == 255){
-            countMotionFrame = 0;  
+            countMotionFrame = 0;
         }else{
           countMotionFrame ++;
         }
@@ -244,9 +246,16 @@ TaskHandle_t httpImu;
     imu_data[IMU_DATA*countImu+6] = (tim64>>48) & 0xFFFF;
     
     countImu ++;
+    if(countImu%100 == 0){
+        //USE_SERIAL.println("Fingerprint ...");
+        //float test = imu.calcAccel(imu.ax);
+        //USE_SERIAL.println("Fingerprint ...");
+        //USE_SERIAL.println(test);
+        USE_SERIAL.printf("IMU: %d, %d, %d\n", imu.ax, imu.ay, imu.az);
+    }
     
     if(countImu%2000 == 0){
-        USE_SERIAL.printf("IMU: %d\n", imu.ax);
+        USE_SERIAL.printf("IMU: %d, %d, %d\n", imu.ax, imu.ay, imu.az);
         //USE_SERIAL.printf("IMU: %d\n", countImu);
         memcpy(imu_http, imu_data, 40000);        
         imu_http[40000] = countImuFrame;
@@ -497,7 +506,7 @@ void setup(){
   void intMotionTask(void * parameter){
     timer1 = timerBegin(1, 80, true);
     timerAttachInterrupt(timer1, &onTimerMotion, true);
-    timerAlarmWrite(timer1, 1000, true);
+    timerAlarmWrite(timer1, 100000, true);
     timerAlarmEnable(timer1);
 
     vTaskSuspend(NULL);
@@ -623,7 +632,7 @@ void setup(){
   void intRssiTask(void * parameter){
     timer3 = timerBegin(3, 80, true);
     timerAttachInterrupt(timer3, &onTimerRssi, true);
-    timerAlarmWrite(timer3, 1000, true);
+    timerAlarmWrite(timer3, 2000, true);
     timerAlarmEnable(timer3);
 
     vTaskSuspend(NULL);
