@@ -105,7 +105,7 @@ def tic1_DecodeSingle(nibble):
 cdef list decoded = []
 cdef list time_series = []
 cdef char* buf = ''
-cdef char* input_file = 'data/data_aud_stk_16khz_1848.txt'
+cdef char* input_file = '../../time-sync-data/data_aud_stk_16khz_0100.txt'
 
 
 def decode_adpcm(_buf):
@@ -250,7 +250,7 @@ def main():
     cdef int data_len = 50
     cdef bytes frame = bytes()
     cdef bytes timestamps = bytes()
-    cdef char* input_file = b'data/data_aud_stk_16khz_1848.txt'
+    cdef char* input_file = b'../../time-sync-data/data_aud_stk_16k_0100.txt'
 
     cdef bytes data
     cdef int i

@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <ESP.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -11,7 +10,54 @@
 #define LOCAL_CHAR_UUID     "beb5483e-36e1-4688-b7f5-ea07361b26a8"
 
 
+uint16_t imu_data[10];
 MPU9250_DMP imu;
+BLECharacteristic *pCharLocal;
+// define timers
+hw_timer_t* timer0 = NULL;
+BaseType_t pxReadTaskWoken;
+TaskHandle_t httpRead;
+
+void IRAM_ATTR onTimer() {   
+
+    pxReadTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(httpRead, &pxReadTaskWoken);
+    if (pxReadTaskWoken == pdTRUE){
+            portYIELD_FROM_ISR();
+    }
+}
+
+
+void httpReadTask(void * parameter){
+
+    while(1){
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+      uint64_t tim64;
+      if (imu.dataReady()){
+          imu.update();
+          tim64 = esp_timer_get_time();
+          imu_data[0] = imu.ax;
+          imu_data[1] = imu.ay;
+          imu_data[2] = imu.az;
+          imu_data[3] = imu.gx;
+          imu_data[4] = imu.gy;
+          imu_data[5] = imu.gz;
+      }else{
+          Serial.printf("Values were not available ...\n");
+          memset(imu_data, 0, 12);
+          tim64 = esp_timer_get_time();
+      }
+
+      imu_data[9] = tim64 & 0xFFFF;
+      imu_data[8] = (tim64>>16) & 0xFFFF;
+     imu_data[7] = (tim64>>32) & 0xFFFF;
+     imu_data[6] = (tim64>>48) & 0xFFFF;
+     pCharLocal->setValue((uint8_t *) imu_data, 20);
+     pCharLocal->notify();
+     portYIELD();
+  }
+}
+
 
 void setup() 
 {
@@ -56,55 +102,43 @@ void setup()
   // setSampleRate. Acceptable values range from 4Hz to 1kHz
   imu.setSampleRate(1000); // Set sample rate to 10Hz
 
-}
+  BLEDevice::init("Sparkfun ESP32 Things");
+  BLEServer *pServer = BLEDevice::createServer();
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  // for local timestamps
+  pCharLocal = pService->createCharacteristic(
+                                         LOCAL_CHAR_UUID,
+                                         BLECharacteristic::PROPERTY_READ |
+                                         BLECharacteristic::PROPERTY_NOTIFY
+                                       );
+  // Create a BLE Descriptor
+  pCharLocal->addDescriptor(new BLE2902());
+  // Set initail value
+  pCharLocal->setValue((uint8_t *) imu_data, 20);
+  pService->start();
+  // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+  BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->addServiceUUID(SERVICE_UUID);
+  pAdvertising->setScanResponse(true);
+  pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+  pAdvertising->setMinPreferred(0x12);
+  BLEDevice::startAdvertising();
+  Serial.println("Characteristic defined! Now you can read it in your phone!");
 
-void loop() 
-{
-  // dataReady() checks to see if new accel/gyro data
-  // is available. It will return a boolean true or false
-  // (New magnetometer data cannot be checked, as the library
-  //  runs that sensor in single-conversion mode.)
-  if ( imu.dataReady() )
-  {
-    // Call update() to update the imu objects sensor data.
-    // You can specify which sensors to update by combining
-    // UPDATE_ACCEL, UPDATE_GYRO, UPDATE_COMPASS, and/or
-    // UPDATE_TEMPERATURE.
-    // (The update function defaults to accel, gyro, compass,
-    //  so you don't have to specify these values.)
-    imu.update(UPDATE_ACCEL | UPDATE_GYRO);
-    printIMUData();
-  }
-  delay(1000);
-}
+  timer0 = timerBegin(0, 80, true);
+  timerAttachInterrupt(timer0, &onTimer, true);
+  timerAlarmWrite(timer0, 5000, true);
+  timerAlarmEnable(timer0);
 
-void printIMUData(void)
-{  
-  // After calling update() the ax, ay, az, gx, gy, gz, mx,
-  // my, mz, time, and/or temerature class variables are all
-  // updated. Access them by placing the object. in front:
+  xTaskCreatePinnedToCore(httpReadTask,   // function to implement task
+                            "httpRead",      // Task name
+                            4096,         // stack size in words
+                            NULL,           // arguments
+                            2,              // priority
+                            &httpRead,       // task handle
+                            0);
 
-  // Use the calcAccel, calcGyro, and calcMag functions to
-  // convert the raw sensor readings (signed 16-bit values)
-  // to their respective units.
-  float accelX = imu.calcAccel(imu.ax);
-  float accelY = imu.calcAccel(imu.ay);
-  float accelZ = imu.calcAccel(imu.az);
-  float gyroX = imu.calcGyro(imu.gx);
-  float gyroY = imu.calcGyro(imu.gy);
-  float gyroZ = imu.calcGyro(imu.gz);
-
-  SerialPort.printf("IMU: %d\n", imu.az);
-  SerialPort.println("Accel: " + String(accelX) + ", " +
-              String(accelY) + ", " + String(accelZ) + " g");
-  SerialPort.println("Gyro: " + String(gyroX) + ", " +
-              String(gyroY) + ", " + String(gyroZ) + " dps");
-  SerialPort.println("Time: " + String(imu.time) + " ms");
-  SerialPort.println();
-}
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
 }

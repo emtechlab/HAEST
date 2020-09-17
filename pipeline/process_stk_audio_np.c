@@ -4164,7 +4164,7 @@ static PyObject *__pyx_pf_20process_stk_audio_np_8main(CYTHON_UNUSED PyObject *_
  *     cdef int data_len = 50
  *     cdef bytes frame = bytes()             # <<<<<<<<<<<<<<
  *     cdef bytes timestamps = bytes()
- *     cdef char* input_file = b'data/data_aud_stk_16khz_1848.txt'
+ *     cdef char* input_file = b'../../time-sync-data/data_aud_stk_16k_0100.txt'
  */
   __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)(&PyBytes_Type))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 251, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
@@ -4175,7 +4175,7 @@ static PyObject *__pyx_pf_20process_stk_audio_np_8main(CYTHON_UNUSED PyObject *_
  *     cdef int data_len = 50
  *     cdef bytes frame = bytes()
  *     cdef bytes timestamps = bytes()             # <<<<<<<<<<<<<<
- *     cdef char* input_file = b'data/data_aud_stk_16khz_1848.txt'
+ *     cdef char* input_file = b'../../time-sync-data/data_aud_stk_16k_0100.txt'
  * 
  */
   __pyx_t_1 = __Pyx_PyObject_CallNoArg(((PyObject *)(&PyBytes_Type))); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 252, __pyx_L1_error)
@@ -4186,11 +4186,11 @@ static PyObject *__pyx_pf_20process_stk_audio_np_8main(CYTHON_UNUSED PyObject *_
   /* "process_stk_audio_np.pyx":253
  *     cdef bytes frame = bytes()
  *     cdef bytes timestamps = bytes()
- *     cdef char* input_file = b'data/data_aud_stk_16khz_1848.txt'             # <<<<<<<<<<<<<<
+ *     cdef char* input_file = b'../../time-sync-data/data_aud_stk_16k_0100.txt'             # <<<<<<<<<<<<<<
  * 
  *     cdef bytes data
  */
-  __pyx_v_input_file = ((char *)"data/data_aud_stk_16khz_1848.txt");
+  __pyx_v_input_file = ((char *)"../../time-sync-data/data_aud_stk_16k_0100.txt");
 
   /* "process_stk_audio_np.pyx":260
  *     cdef int end
@@ -6793,7 +6793,7 @@ if (!__Pyx_RefNanny) {
  * cdef list decoded = []
  * cdef list time_series = []             # <<<<<<<<<<<<<<
  * cdef char* buf = ''
- * cdef char* input_file = 'data/data_aud_stk_16khz_1848.txt'
+ * cdef char* input_file = '../../time-sync-data/data_aud_stk_16khz_0100.txt'
  */
   __pyx_t_2 = PyList_New(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
@@ -6806,7 +6806,7 @@ if (!__Pyx_RefNanny) {
  * cdef list decoded = []
  * cdef list time_series = []
  * cdef char* buf = ''             # <<<<<<<<<<<<<<
- * cdef char* input_file = 'data/data_aud_stk_16khz_1848.txt'
+ * cdef char* input_file = '../../time-sync-data/data_aud_stk_16khz_0100.txt'
  * 
  */
   __pyx_v_20process_stk_audio_np_buf = ((char *)"");
@@ -6814,11 +6814,11 @@ if (!__Pyx_RefNanny) {
   /* "process_stk_audio_np.pyx":108
  * cdef list time_series = []
  * cdef char* buf = ''
- * cdef char* input_file = 'data/data_aud_stk_16khz_1848.txt'             # <<<<<<<<<<<<<<
+ * cdef char* input_file = '../../time-sync-data/data_aud_stk_16khz_0100.txt'             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_v_20process_stk_audio_np_input_file = ((char *)"data/data_aud_stk_16khz_1848.txt");
+  __pyx_v_20process_stk_audio_np_input_file = ((char *)"../../time-sync-data/data_aud_stk_16khz_0100.txt");
 
   /* "process_stk_audio_np.pyx":111
  * 

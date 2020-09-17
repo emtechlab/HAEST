@@ -59,16 +59,18 @@ def decode_opt_stk(filename, data_rate):
     cdef double data_decoded
     cdef int ind
 
+    cdef int offset=0
+    cdef int count=0
     for i in range(0, len(stream), data_len):
 
-        ind = i//data_len
+        ind = (i//data_len) - offset
 
         data_decoded = to_lux(stream[i:i+2])
         time_lo = int.from_bytes(stream[i+2:i+4][::-1]+stream[i+4:i+6][::-1], 'big')
         time_hi = int.from_bytes(stream[i+6:i+8][::-1]+stream[i+8:i+10][::-1], 'big')
 
         # replacing bad data points
-        if data_decoded == 0 and i > 0:
+        if data_decoded == 0 and ind > 0:
             output_view[0, ind] = output[0, ind-1]
             output_view[1, ind] = output[1, ind-1]+period
 
@@ -78,11 +80,103 @@ def decode_opt_stk(filename, data_rate):
             output_view[1, ind] = int((time_hi*(2**32))/48 + time_lo/48)
         
         else:
+            offset += 1
+            count += 1
             print("Houston we have a problem ...")
     
     # cache data for later use
     f = open(os.path.join(cache_path, bytes(cached)), 'wb')
     pickle.dump(output, f)
+
+    return output_view[:, :output.shape[1]-count].copy()
+
+
+def decode_opt_esp(filename, data_rate):
+
+    # check if cached data is found
+    cdef double [:, ::1] output_view
+    cached = bytearray(filename)
+    cached.extend(b'.pkl')
+    if os.path.exists(os.path.join(cache_path, bytes(cached))):
+        # if cached data found return it from here
+        f = open(os.path.join(cache_path, bytes(cached)), 'rb')
+        data = pickle.load(f)
+        output_view = data
+
+        return output_view
+
+    cdef int data_len = 8320
+    cdef int frame_len = 1540
+    cdef int max_sample_count = 500
+
+    print(filename)
+    with open(filename, 'rb') as f:
+        stream = f.read()[20:]
+
+    cdef float period = 1000000/data_rate      # in micro-seconds
+    cdef int samples_len = (len(stream)//data_len)*max_sample_count
+    output = np.zeros((2, samples_len), np.double)
+    output_view = output
+
+    cdef int i
+    cdef long time_hi
+    cdef long time_lo
+    cdef double data_point
+    cdef int ind
+
+    cdef int missing_frames = 0
+    cdef int processed_frames = 0
+
+    cdef int prev_fr_no = 0
+    cdef int duplicates = 0
+
+    for i in range(0, len(stream)-data_len, data_len):
+
+        count = 0
+        processed_frames += 1
+        # tracking missing time
+        if i > 0 and (stream[i+data_len-1] - prev_fr_no > 1 or stream[i+data_len-1] - prev_fr_no + 256 > 1):
+            missing_frames += (stream[i+data_len-1] - prev_fr_no)
+            if stream[i+data_len-1] - prev_fr_no == 0:
+                duplicates += 1
+                continue
+            
+        elif i > 0 and (stream[i+data_len-1] - prev_fr_no < 1 and stream[i+data_len-1] - prev_fr_no > -254):
+            print(stream[i+data_len-1] - prev_fr_no)
+            continue
+
+        for j in range(i, i+data_len-frame_len, frame_len):
+            
+            # getting base timestamp
+            base_data = int.from_bytes(stream[j:j+2][::-1], 'big')*200*3.3/4096.0
+            base_hi = int.from_bytes(stream[j+2:j+4][::-1]+stream[j+4:j+6][::-1], 'big')
+            base_lo = int.from_bytes(stream[j+6:j+8][::-1]+stream[j+8:j+10][::-1], 'big')
+            base_time = base_hi*(2**32)+base_lo
+            #print(base_time)
+
+            output_view[0, (processed_frames-1)*500+count] = base_data
+            output_view[-1, (processed_frames-1)*500+count] = base_time
+            count += 1
+
+            for k in range(j+10, j+frame_len, 6):
+
+                # only 8000 valid samples in space of 8192
+                if count >= max_sample_count:
+                    # print (i, j, k, count)
+                    break
+
+                data_point = int.from_bytes(stream[k:k+2][::-1], 'big')*200*3.3/4096.0
+                off_time = int.from_bytes(stream[k+2:k+4][::-1]+stream[k+4:k+6][::-1], 'big', signed=True)
+                #count += 1
+
+                output_view[0, (processed_frames-1)*500+count] = data_point
+                output_view[-1, (processed_frames-1)*500+count] = base_time-off_time
+                count += 1
+
+            if count >= 500:
+                break
+
+        prev_fr_no = stream[i+data_len-1]
 
     return output_view
 
@@ -91,7 +185,7 @@ def decode_imu_stk(filename, data_rate):
 
     # check if cached data is found
     cdef double [:, ::1] output_view
-    cached = bytearray(filename)
+    cached = bytearray(filename[:-4])
     cached.extend(b'.pkl')
     if os.path.exists(os.path.join(cache_path, bytes(cached))):
         # if cached data found return it from here
@@ -154,6 +248,85 @@ def decode_imu_stk(filename, data_rate):
     return output_view
 
 
+def decode_imu_esp2(filename, data_rate):
+
+    # check if cached data is found
+    cdef double [:, ::1] output_view
+    cached = bytearray(filename)
+    cached.extend(b'.pkl')
+    '''if os.path.exists(os.path.join(cache_path, bytes(cached))):
+        # if cached data found return it from here
+        f = open(os.path.join(cache_path, bytes(cached)), 'rb')
+        data = pickle.load(f)
+        output_view = data
+
+        return output_view'''
+
+    cdef int data_len = 40001
+    cdef int frame_len = 20
+    cdef int period = 1000000/data_rate      # in micro-seconds
+
+    cdef bytes stream
+    with open(filename, 'rb') as f:
+        stream = f.read()[20:]
+
+    cdef int samples_len = (len(stream)//data_len)*2000
+    output = np.zeros((4, samples_len), np.double)
+    output_view = output
+    cdef int missing_frames = 0
+
+    cdef int prev_fr_no = 0
+    cdef int count = 0
+    cdef int processed_frames = 0
+    cdef int duplicates = 0
+    cdef int i = 0
+
+    cdef double data_x
+    cdef double data_y
+    cdef double data_z
+    cdef long time_hi
+    cdef long time_lo
+    cdef int ind
+    for i in range(0, len(stream), data_len):
+
+        ind = i//data_len
+        if i+data_len-1 >= len(stream):
+            break
+        
+        for j in range(i, i+data_len, frame_len):
+            # axis data
+            data_x = int.from_bytes(stream[j:j+2][::-1], 'big', signed=True)/(32768/8)
+            data_y = int.from_bytes(stream[j+2:j+4][::-1], 'big', signed=True)/(32768/8)
+            data_z = int.from_bytes(stream[j+4:j+8][::-1], 'big', signed=True)/(32768/8)
+
+            print(stream[j:j+2][::-1], stream[j+2:j+4][::-1], stream[j+4:j+6][::-1])
+
+            # timestamps
+            time_hi = int.from_bytes(stream[j+14:j+16][::-1]+stream[j+12:j+14][::-1], 'big')
+            time_lo = int.from_bytes(stream[j+16:j+18][::-1]+stream[j+18:j+20][::-1], 'big')
+
+            if time_hi == 0 and time_lo == 0 and i > 0:
+                output[0, ind] = output[0, ind-1]
+                output[1, ind] = output[1, ind-1]
+                output[2, ind] = output[2, ind-1]
+                output[-1, ind] = output[-1, ind-1]+period
+
+            elif not (time_hi != 0 and time_lo != 0):
+                output[0, ind] = data_x
+                output[1, ind] = data_y
+                output[2, ind] = data_z
+                output[-1, ind] = time_hi*(2**32) + time_lo
+            
+            else:
+                print("Houston we have a problem ...")
+
+    # cache data for later use
+    f = open(os.path.join(cache_path, bytes(cached)), 'wb')
+    pickle.dump(output, f)
+
+    return output
+
+
 def decode_imu_esp(filename, data_rate):
 
     # check if cached data is found
@@ -191,24 +364,33 @@ def decode_imu_esp(filename, data_rate):
         ind = i//data_len
 
         # axis data
-        data_x = int.from_bytes(stream[i+6:i+8][::-1], 'big', signed=True)/(32768/8)
-        data_y = int.from_bytes(stream[i+8:i+10][::-1], 'big', signed=True)/(32768/8)
-        data_z = int.from_bytes(stream[i+10:i+12][::-1], 'big', signed=True)/(32768/8)
+        data_x = int.from_bytes(stream[i:i+2][::-1], 'big', signed=True)/(32768/8)
+        data_y = int.from_bytes(stream[i+2:i+4][::-1], 'big', signed=True)/(32768/8)
+        data_z = int.from_bytes(stream[i+4:i+6][::-1], 'big', signed=True)/(32768/8)
 
         # timestamps
-        time_lo = int.from_bytes(stream[i+14:i+16][::-1]+stream[i+12:i+14][::-1], 'big')
-        time_hi = int.from_bytes(stream[i+18:i+20][::-1]+stream[i+16:i+18][::-1], 'big')
+        time_hi = int.from_bytes(stream[i+12:i+14][::-1]+stream[i+14:i+16][::-1], 'big')
+        time_lo = int.from_bytes(stream[i+16:i+18][::-1]+stream[i+18:i+20][::-1], 'big')
 
-        if time_hi == 0 and time_lo == 0 and i > 0:
+        if ((time_hi == 0 and time_lo == 0) or ((data_x <= 0.005 and data_x >= -0.005) or data_y == 0 or data_z ==0 )) and i > 0:
             output[0, ind] = output[0, ind-1]
             output[1, ind] = output[1, ind-1]
             output[2, ind] = output[2, ind-1]
             output[-1, ind] = output[-1, ind-1]+period
 
         elif not (time_hi != 0 and time_lo != 0):
+            #if data_x < 0:
             output[0, ind] = data_x
+            #else:
+            #    output[0, ind] = output[0, ind-1]
+            #if data_y > 0:
             output[1, ind] = data_y
+            #else:
+            #    output[1, ind] = output[1, ind-1]
+            #if data_z > 0:
             output[2, ind] = data_z
+            #else:
+            #    output[2, ind] = output[2, ind-1]
             output[-1, ind] = time_hi*(2**32) + time_lo
         
         else:
@@ -261,7 +443,7 @@ def decode_aud_esp(char* filename,
 
     cdef bytes stream
     with open(filename, 'rb') as f:
-        stream = f.read()[22:]
+        stream = f.read()[20:]
 
     #output = ([], [])
     cdef int samples_len = (len(stream)//33280)*8000
@@ -284,7 +466,7 @@ def decode_aud_esp(char* filename,
     cdef long base_hi
     cdef long base_lo
     cdef int off_time
-    cdef int base_time
+    cdef long base_time
 
     for i in range(0, len(stream)-data_len, data_len):
 
@@ -407,7 +589,7 @@ def decode_rssi_esp(filename, data_rate):
     return output_view
 
 data_cbs = {
-    b'opt': {b'stk': decode_opt_stk},
+    b'opt': {b'stk': decode_opt_stk, b'esp': decode_opt_esp},
     b'imu': {b'stk': decode_imu_stk, b'esp': decode_imu_esp},
     b'aud': {b'stk': decode_aud_stk, b'esp': decode_aud_esp},
     b'mot': {b'esp': decode_mot_esp},
@@ -591,7 +773,7 @@ def ewms(double [:] data, float alpha=0.5):
 def detect_events(double [:, ::1] data, 
                   char* data_type, 
                   int samp_freq, 
-                  int thresh=1, 
+                  float thresh=1, 
                   float alpha=0.5, 
                   int data_axis=0):
 
@@ -626,7 +808,7 @@ def detect_events(double [:, ::1] data,
         plt.plot(range(data_sens_view.shape[0]), data_sens_view, 'g--')
         plt.plot(range(ss_view.shape[0]), stats_view[0, :], 'b--')
         plt.plot(range(ss_view.shape[0]), ss_view, 'r--')
-        plt.plot(range(ss_view.shape[0]), ss_dual_view, '--')
+        #plt.plot(range(ss_view.shape[0]), ss_dual_view, '--')
         plt.show()
         #exit()
 
@@ -659,8 +841,11 @@ def detect_events(double [:, ::1] data,
     for i in range(data_time_view.shape[0]):
 
         t = data_time_view[i]
+        if data_sens_view[i] > stats_view[0, i] + thresh*stats_view[1, i]:
+            # print(t - event_start)
+            pass
         if data_sens_view[i] > stats_view[0, i] + thresh*stats_view[1, i] and t - event_start > event_gap:
-
+            #print(i)
             event_start = t
             output_view[i] = 1
 
@@ -694,7 +879,6 @@ def process_data(char* file_path_01,
 
     # decoding data
     cdef double p1 = time()
-    
     cdef double [:, ::1] data = data_cbs[data_type][device_type](file_path_01, data_rate)
     cdef double p2 = time()
     print("decoding first stream took: {}".format(p2-p1))
@@ -702,10 +886,15 @@ def process_data(char* file_path_01,
     cdef double p3 = time()
     print("decoding second stream took: {}".format(p3-p2))
 
-    #plt.figure()
-    #plt.plot(scale_to_sec(temp_data2[-1, :]), temp_data2[0, :], 'g--')
-    #plt.show()
-    #exit()
+    '''plt.figure()
+    #plt.plot(scale_to_sec(data[-1, :]), data[0, :], 'bx')
+    #plt.plot(scale_to_sec(temp_data2[-1, :]), temp_data2[0, :], 'g+')
+    plt.plot(range(data.shape[1]), data[0, :], 'bx')
+    plt.plot(range(temp_data2.shape[1]), temp_data2[0, :], 'g+')
+    #plt.plot(range(480000), data[0, :][:480000], 'bx')
+    #plt.plot(range(480000), temp_data2[0, :][:480000], 'g+')
+    plt.show()
+    exit(0)'''
 
     # truncate second data stream to synchronize its starting point with first stream
     cdef double [:, ::1] data2 = temp_data2[:, offset:].copy()
@@ -755,18 +944,19 @@ def process_data(char* file_path_01,
         data_axis = 0
         data_axis2 = 0
     elif data_type == b'imu':
-        data_axis = 2               # [TUNE]
-        data_axis2 = 2
+        data_axis = 0               # [TUNE]
+        data_axis2 = 0
 
     cdef float thresh = 0.0
     if data_type == b'opt':
-        thresh = 2
+        thresh = 2.0
     elif data_type == b'imu':
-        thresh = 2
+        thresh = 1.8
     elif data_type == b'aud':
+        # thresh = 2.15
         thresh = 2.15
     elif data_type == b'rssi':
-        thresh = 1.8
+        thresh = 1.5
 
     cdef int [::1] events
     cdef int [::1] events2
@@ -786,7 +976,6 @@ def process_data(char* file_path_01,
         print(sum([x for x in events if x == 1]))
         print(sum([x for x in events2 if x == 1]))
 
-
     # matching the two detecting events for synchronization error
     
     # sampling period
@@ -800,10 +989,10 @@ def process_data(char* file_path_01,
         event_gap = 1000000
         search_wind = int(event_gap/period)
     elif data_type == b'imu':
-        event_gap = 1000000
+        event_gap = 250000
         search_wind = int(event_gap/period)
     elif data_type == b'aud':
-        event_gap = 500000
+        event_gap = 5000000
         search_wind = int(event_gap/period)
     elif data_type == b'rssi':
         event_gap = 1000000
@@ -850,8 +1039,9 @@ def process_data(char* file_path_01,
                         current_offset = data[-1, i]-data2[-1, current_ind]-offsets[0]
 
                 if current_offset <= period/2 and current_offset >= -period/2:
-                    offsets.append(current_offset)
-                    off_time.append(data[-1, current_ind])
+                    if current_ind < data.shape[1]:
+                        offsets.append(current_offset)
+                        off_time.append(data[-1, current_ind])
                 else:
                     print(current_offset)
                     print('Houston, we seem to have a problem :/')
@@ -872,32 +1062,50 @@ def process_data(char* file_path_01,
         #per = get_samp_per(data2, 20)
         #print("Minumum and maximum sampling intervals are {} and {} with range of {}".format(min(per), max(per), max(per)-min(per)))
         # getting data plots to visualize
+        '''plt.figure()
+        plt.plot(range(data.shape[1]), data[data_axis, :], 'b+')
+        plt.plot(range(data2.shape[1]), data2[data_axis2, :], 'g+')
+        plt.show()
+        exit()'''
         ax = plt.subplot(3, 1, 1)
         #plt.plot(scale_to_sec(data[-1]), data[0], 'g+')
         #plt.plot(scale_to_sec(data2[-1]), data2[0], 'b+')
-        ax.plot(range(data.shape[1]), data[0, :], 'g+')
-        ax.plot(range(data2.shape[1]), data2[0, :], 'b+')
+        #ax.plot(range(data.shape[1]), data[0, :], 'g+')
+        ax.plot(range(data.shape[1]), data[0, :], 'b+')
         if data_type == b'imu':
             ax2 = plt.subplot(3, 1, 2)
             #plt.plot(scale_to_sec(data[-1]), data[0], 'g+')
             #plt.plot(scale_to_sec(data2[-1]), data2[0], 'b+')
-            ax2.plot(range(len(data[1])), data[1], 'g+')
-            ax2.plot(range(len(data2[1])), data2[1], 'b+')
+            #ax2.plot(range(len(data[1])), data[1], 'g+')
+            ax2.plot(range(len(data[1])), data[1], 'b+')
 
             ax3 = plt.subplot(3, 1, 3)
             #plt.plot(scale_to_sec(data[-1]), data[0], 'g+')
             #plt.plot(scale_to_sec(data2[-1]), data2[0], 'b+')
-            ax3.plot(range(len(data[2])), data[2], 'g+')
-            ax3.plot(range(len(data2[2])), data2[2], 'b+')
+            #ax3.plot(range(len(data[2])), data[2], 'g+')
+            ax3.plot(range(len(data[2])), data[2], 'b+')
         plt.show()
 
     # plot offsets
-    #print(offsets)
-    #print(off_time)
+    print(offsets)
+    print(off_time)
+
+    # writing for combined plots
+    pick = (offsets, off_time)
+    f = open(os.path.join(cache_path, b'../../time-sync-data/aud-temp.pkl'), 'wb')
+    pickle.dump(pick, f)
+
+    #### TREND LINE ####
+    z = np.polyfit(off_time[1:], offsets[1:], 1)
+    p = np.poly1d(z)
+    ####################
+
+
     cdef float drift = round((offsets[-1] - offsets[1])*1000000/(off_time[-1] - off_time[1]), 2)
     
     plt.figure()
     plt.plot(scale_to_sec(off_time[1:]), offsets[1:], 'r+', label='Raw Offsets with drift: {:.2f} ppm/sec'.format(drift))
+    plt.plot(scale_to_sec(off_time[1:]), p(off_time[1:]), 'g--')
     plt.xlabel("Time (secs)")
     plt.ylabel("Error (ppm)")
     plt.title("Synchronization Error with {} sensor at {} Hz".format(data_type.upper(), data_rate))
@@ -911,52 +1119,52 @@ def process_data(char* file_path_01,
 
 def main():   
 
-    ######################## OPTICAL #########################
+    '''######################## OPTICAL #########################
 
-    '''cdef char* data_type = 'opt'           # aud, opt, acc, motion, rssi
-    cdef char* device_type = 'stk'         # stk, esp
+    cdef char* data_type = 'opt'           # aud, opt, acc, motion, rssi
+    cdef char* device_type = 'esp'         # stk, esp
     cdef char* device_type2 = 'stk'         # stk, esp
     cdef int data_rate =  10             # sampling rate (hz)
-    cdef int lowest_data_rate = 5
+    cdef int lowest_data_rate = 10
     cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
     cdef float alpha = 0.3                 # moving average co-efficient   [TUNE]
-    cdef int offset = 29                 # start index of second data series     [TUNE]
+    cdef int offset = 0                 # start index of second data series     [TUNE]
 
-    cdef char* file_path_01 = 'data/data_opt_stk_10hz_1325.txt'           # data from sensor 1
-    cdef char* file_path_02 = 'data/data_opt_stk_5hz_1325.txt'           # data from sensor 2'''
+    cdef char* file_path_01 = '../../time-sync-data/data_opt_esp_10_01_2208'           # data from sensor 1
+    cdef char* file_path_02 = '../../time-sync-data/data_opt_stk_10_02_2230.txt'           # data from sensor 2'''
 
-    ######################## IMU #########################
+    '''######################## IMU #########################
 
-    '''cdef char* data_type = 'imu'           # aud, opt, acc, motion, rssi
-    cdef char* device_type = 'stk'         # stk, esp
+    cdef char* data_type = 'imu'           # aud, opt, acc, motion, rssi
+    cdef char* device_type = 'esp'         # stk, esp
     cdef char* device_type2 = 'stk'         # stk, esp
     cdef int data_rate =  200             # sampling rate (hz)
     cdef float alpha = 0.3                 # moving average co-efficient
-    cdef int lowest_data_rate = 20
-    cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
-    cdef int offset = 50                 # start index of second data series     [TUNE]
-
-    cdef char* file_path_01 = 'data/data_imu_stk_200hz_1523.txt'           # data from sensor 1
-    cdef char* file_path_02 = 'data/data_imu_stk_20hz_1523-2.txt'           # data from sensor 2'''
-
-    '''######################## Audio #########################
-
-    cdef char* data_type = 'aud'           # aud, opt, acc, motion, rssi
-    cdef char* device_type = 'esp'         # stk, esp
-    cdef char* device_type2 = 'stk'         # stk, esp
-    cdef int data_rate =  16000             # sampling rate (hz)
-    cdef float alpha = 0.3                 # moving average co-efficient
-    cdef int lowest_data_rate = 16000
+    cdef int lowest_data_rate = 200
     cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
     cdef int offset = 0                 # start index of second data series     [TUNE]
 
-    cdef char* file_path_02 = 'data/data_aud_stk_16khz_1848.pkl'           # data from sensor 1
-    cdef char* file_path_01 = 'data/data_aud_esp_16khz_1848'           # data from sensor 2
-    #file_path_01 = 'data/esp_aud_test4'           # data from sensor 2'''
+    cdef char* file_path_01 = '../../time-sync-data/data_imu_esp_200_01_2030.txt'           # data from sensor 1
+    cdef char* file_path_02 = '../../time-sync-data/data_imu_stk_200_02_2030.txt'           # data from sensor 2'''
+
+    ######################## Audio #########################
+
+    cdef char* data_type = 'aud'           # aud, opt, acc, motion, rssi
+    cdef char* device_type = 'esp'         # stk, esp
+    cdef char* device_type2 = 'esp'         # stk, esp
+    cdef int data_rate =  16000             # sampling rate (hz)
+    cdef float alpha = 0.3                 # moving average co-efficient
+    cdef int lowest_data_rate = 8000
+    cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
+    cdef int offset = 0                 # start index of second data series     [TUNE]
+
+    cdef char* file_path_01 = '../../time-sync-data/data_aud_esp_16k_01_1032'           # data from sensor 1
+    cdef char* file_path_02 = '../../time-sync-data/data_aud_esp_8k_00_1032'           # data from sensor 2
+    #file_path_01 = 'data/esp_aud_test4'           # data from sensor 2
 
     ######################## RSSI #########################
 
-    cdef char* data_type = 'rssi'           # aud, opt, acc, motion, rssi
+    '''cdef char* data_type = 'rssi'           # aud, opt, acc, motion, rssi
     cdef char* device_type = 'esp'         # stk, esp
     cdef char* device_type2 = 'esp'         # stk, esp
     cdef int data_rate =  1000             # sampling rate (hz)
@@ -965,9 +1173,9 @@ def main():
     cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
     cdef int offset = 1300                 # start index of second data series     [TUNE]
 
-    cdef char* file_path_02 = 'data/data_rssi_esp_1k_0003-2'           # data from sensor 1
-    cdef char* file_path_01 = 'data/data_rssi_esp_1k_0003'           # data from sensor 2
+    cdef char* file_path_01 = '../../time-sync-data/data_rssi_esp_1k_01_1136'           # data from sensor 1
+    cdef char* file_path_02 = '../../time-sync-data/data_rssi_esp_1k_02_1136'           # data from sensor 2
 
-    process_data(file_path_01, file_path_02, data_type, data_rate, order, device_type, device_type2, False, alpha, offset)
+    process_data(file_path_01, file_path_02, data_type, data_rate, order, device_type, device_type2, True, alpha, offset)'''
 
     return
