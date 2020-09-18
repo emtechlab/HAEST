@@ -49,9 +49,6 @@ void setup() {
  
   Serial.begin(115200);
 
-  pinMode(intPin, INPUT_PULLUP);
-  attachInterrupt(intPin, isrGpio, FALLING);
-
   BLEDevice::init("Sparkfun ESP32 Things");
   BLEServer *pServer = BLEDevice::createServer();
   BLEService *pService = pServer->createService(SERVICE_UUID);
@@ -84,7 +81,8 @@ void setup() {
                             &httpRead,       // task handle
                             1);
 
-  
+  pinMode(intPin, INPUT_PULLUP);
+  attachInterrupt(intPin, isrGpio, FALLING);
 }
 
 
