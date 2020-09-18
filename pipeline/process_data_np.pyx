@@ -109,7 +109,6 @@ def decode_opt_esp(filename, data_rate):
     cdef int frame_len = 1540
     cdef int max_sample_count = 500
 
-    print(filename)
     with open(filename, 'rb') as f:
         stream = f.read()[20:]
 
@@ -491,6 +490,7 @@ def decode_aud_esp(char* filename,
             base_data = int.from_bytes(stream[j:j+2][::-1], 'big')
             base_hi = int.from_bytes(stream[j+2:j+4][::-1]+stream[j+4:j+6][::-1], 'big')
             base_lo = int.from_bytes(stream[j+6:j+8][::-1]+stream[j+8:j+10][::-1], 'big')
+            print(base_hi, base_lo)
             base_time = base_hi*(2**32)+base_lo
 
             output_view[0, (processed_frames-1)*8000+count] = base_data
@@ -887,10 +887,10 @@ def process_data(char* file_path_01,
     print("decoding second stream took: {}".format(p3-p2))
 
     '''plt.figure()
-    #plt.plot(scale_to_sec(data[-1, :]), data[0, :], 'bx')
+    plt.plot(scale_to_sec(data[-1, :]), data[0, :], 'bx')
     #plt.plot(scale_to_sec(temp_data2[-1, :]), temp_data2[0, :], 'g+')
-    plt.plot(range(data.shape[1]), data[0, :], 'bx')
-    plt.plot(range(temp_data2.shape[1]), temp_data2[0, :], 'g+')
+    #plt.plot(range(data.shape[1]), data[0, :], 'bx')
+    #plt.plot(range(temp_data2.shape[1]), temp_data2[0, :], 'g+')
     #plt.plot(range(480000), data[0, :][:480000], 'bx')
     #plt.plot(range(480000), temp_data2[0, :][:480000], 'g+')
     plt.show()
@@ -912,7 +912,7 @@ def process_data(char* file_path_01,
     # fill in time gaps
     # print(data.shape, data2.shape)
     data = fill_in_time(data_type, data_rate, data)
-    data2 = fill_in_time(data_type, data_rate/order, data2)
+    #data2 = fill_in_time(data_type, data_rate/order, data2)
 
     # print(data.shape, data2.shape)
     cdef double p6 = time()
@@ -951,7 +951,7 @@ def process_data(char* file_path_01,
     if data_type == b'opt':
         thresh = 2.0
     elif data_type == b'imu':
-        thresh = 1.8
+        thresh = 2.0
     elif data_type == b'aud':
         # thresh = 2.15
         thresh = 2.15
@@ -989,7 +989,7 @@ def process_data(char* file_path_01,
         event_gap = 1000000
         search_wind = int(event_gap/period)
     elif data_type == b'imu':
-        event_gap = 250000
+        event_gap = 500000
         search_wind = int(event_gap/period)
     elif data_type == b'aud':
         event_gap = 5000000
@@ -1092,7 +1092,7 @@ def process_data(char* file_path_01,
 
     # writing for combined plots
     pick = (offsets, off_time)
-    f = open(os.path.join(cache_path, b'../../time-sync-data/aud-temp.pkl'), 'wb')
+    f = open(os.path.join(cache_path, b'../../time-sync-data/imu-temp.pkl'), 'wb')
     pickle.dump(pick, f)
 
     #### TREND LINE ####
@@ -1130,37 +1130,37 @@ def main():
     cdef float alpha = 0.3                 # moving average co-efficient   [TUNE]
     cdef int offset = 0                 # start index of second data series     [TUNE]
 
-    cdef char* file_path_01 = '../../time-sync-data/data_opt_esp_10_01_2208'           # data from sensor 1
-    cdef char* file_path_02 = '../../time-sync-data/data_opt_stk_10_02_2230.txt'           # data from sensor 2'''
+    cdef char* file_path_01 = '../../time-sync-data/data_opt_esp_10_02_1319'           # data from sensor 1
+    cdef char* file_path_02 = '../../time-sync-data/data_opt_stk_10_02_1432.txt'           # data from sensor 2'''
 
-    '''######################## IMU #########################
+    ######################## IMU #########################
 
     cdef char* data_type = 'imu'           # aud, opt, acc, motion, rssi
-    cdef char* device_type = 'esp'         # stk, esp
+    cdef char* device_type = 'stk'         # stk, esp
     cdef char* device_type2 = 'stk'         # stk, esp
     cdef int data_rate =  200             # sampling rate (hz)
     cdef float alpha = 0.3                 # moving average co-efficient
-    cdef int lowest_data_rate = 200
+    cdef int lowest_data_rate = 50
     cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
-    cdef int offset = 0                 # start index of second data series     [TUNE]
+    cdef int offset = 80                 # start index of second data series     [TUNE]
 
-    cdef char* file_path_01 = '../../time-sync-data/data_imu_esp_200_01_2030.txt'           # data from sensor 1
-    cdef char* file_path_02 = '../../time-sync-data/data_imu_stk_200_02_2030.txt'           # data from sensor 2'''
+    cdef char* file_path_01 = '../../time-sync-data/data_imu_stk_200_01_2000.txt'           # data from sensor 1
+    cdef char* file_path_02 = '../../time-sync-data/data_imu_stk_50_02_2000.txt'           # data from sensor 2
 
-    ######################## Audio #########################
+    '''######################## Audio #########################
 
     cdef char* data_type = 'aud'           # aud, opt, acc, motion, rssi
     cdef char* device_type = 'esp'         # stk, esp
     cdef char* device_type2 = 'esp'         # stk, esp
     cdef int data_rate =  16000             # sampling rate (hz)
     cdef float alpha = 0.3                 # moving average co-efficient
-    cdef int lowest_data_rate = 8000
+    cdef int lowest_data_rate = 16000
     cdef int order = int(data_rate/lowest_data_rate)       # downsampling first device data to match lower sampling rate
     cdef int offset = 0                 # start index of second data series     [TUNE]
 
-    cdef char* file_path_01 = '../../time-sync-data/data_aud_esp_16k_01_1032'           # data from sensor 1
-    cdef char* file_path_02 = '../../time-sync-data/data_aud_esp_8k_00_1032'           # data from sensor 2
-    #file_path_01 = 'data/esp_aud_test4'           # data from sensor 2
+    cdef char* file_path_02 = '../../time-sync-data/data_aud_esp_16k_01_1258'           # data from sensor 1
+    cdef char* file_path_01 = '../../time-sync-data/data_aud_esp_16k_02_1258'           # data from sensor 2
+    #file_path_01 = 'data/esp_aud_test4'           # data from sensor 2'''
 
     ######################## RSSI #########################
 
@@ -1174,8 +1174,8 @@ def main():
     cdef int offset = 1300                 # start index of second data series     [TUNE]
 
     cdef char* file_path_01 = '../../time-sync-data/data_rssi_esp_1k_01_1136'           # data from sensor 1
-    cdef char* file_path_02 = '../../time-sync-data/data_rssi_esp_1k_02_1136'           # data from sensor 2
+    cdef char* file_path_02 = '../../time-sync-data/data_rssi_esp_1k_02_1136'           # data from sensor 2'''
 
-    process_data(file_path_01, file_path_02, data_type, data_rate, order, device_type, device_type2, True, alpha, offset)'''
+    process_data(file_path_01, file_path_02, data_type, data_rate, order, device_type, device_type2, True, alpha, offset)
 
     return

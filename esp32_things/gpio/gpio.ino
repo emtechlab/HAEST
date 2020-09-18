@@ -2,7 +2,6 @@
 
 // includes
 #include <Arduino.h>
-#include <ESP.h>
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
@@ -14,18 +13,37 @@
 
 
 // Global variables
-int intPin = 36;
+int intPin = 34;
 uint64_t timestamp;
+
 BLECharacteristic *pCharLocal;
+BaseType_t pxReadTaskWoken;
+TaskHandle_t httpRead;
 
 // interrupt service routines
 void IRAM_ATTR isrGpio() {
 
     timestamp = esp_timer_get_time();
-    pCharLocal->setValue((uint8_t *) timestamp, 8);
-    pCharLocal->notify();
+    //Serial.println(*((uint8_t *) &timestamp));
+    //pCharLocal->setValue((uint8_t *) &timestamp, 8);
+    //pCharLocal->notify();
+    pxReadTaskWoken = pdFALSE;
+    vTaskNotifyGiveFromISR(httpRead, &pxReadTaskWoken);
+    if (pxReadTaskWoken == pdTRUE){
+            portYIELD_FROM_ISR();
+    }
 }
 
+void httpReadTask(void * parameter){
+
+    while(1){
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+      //Serial.println(*((uint8_t *) &timestamp));
+      pCharLocal->setValue((uint8_t *) &timestamp, 8);
+      pCharLocal->notify();
+      portYIELD();
+    }
+}
 
 void setup() {
  
@@ -46,7 +64,7 @@ void setup() {
   // Create a BLE Descriptor
   pCharLocal->addDescriptor(new BLE2902());
   // Set initail value
-  pCharLocal->setValue((uint8_t *) timestamp, 8);
+  pCharLocal->setValue((uint8_t *) &timestamp, 8);
 
   pService->start();
   // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
@@ -57,6 +75,15 @@ void setup() {
   pAdvertising->setMinPreferred(0x12);
   BLEDevice::startAdvertising();
   Serial.println("Characteristic defined! Now you can read it in your phone!");
+
+  xTaskCreatePinnedToCore(httpReadTask,   // function to implement task
+                            "httpRead",      // Task name
+                            4096,         // stack size in words
+                            NULL,           // arguments
+                            1,              // priority
+                            &httpRead,       // task handle
+                            1);
+
   
 }
 
