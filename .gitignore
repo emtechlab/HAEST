@@ -7,3 +7,6 @@ sensortag/sensortag_cc2650stk_app/FlashROM/**/*.out
 pipeline/**/*.pkl
 pipeline/**/*.wav
 pipeline/**/*.o
+pipeline/build/**/*.o
+pipeline/**/*.c
+pipeline/**/*.so
