@@ -240,7 +240,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.C_DIALECT.1618799296" name="C Dialect" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.C_DIALECT" value="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.C_DIALECT.C99" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.DEFINE.38195770" name="Pre-define NAME (--define, -D)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compilerID.DEFINE" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="CC2650STK"/>
-									<listOptionValue builtIn="false" value="EXCLIDE_NTP"/>
+									<listOptionValue builtIn="false" value="EXCLUDE_NTP"/>
 									<listOptionValue builtIn="false" value="EXCLUDE_HUM"/>
 									<listOptionValue builtIn="false" value="EXCLUDE_BAR"/>
 									<listOptionValue builtIn="false" value="EXCLUDE_TMP"/>
@@ -350,7 +350,7 @@
 								<listOptionValue builtIn="false" value="EXCLUDE_BATT"/>
 								<listOptionValue builtIn="false" value="EXCLUDE_BAR"/>
 								<listOptionValue builtIn="false" value="EXCLUDE_TMP"/>
-								<listOptionValue builtIn="false" value="MAX_PDU_SIZE=27"/>
+								<listOptionValue builtIn="false" value="MAX_PDU_SIZE=65"/>
 								<listOptionValue builtIn="false" value="MAX_NUM_PDU=50000"/>
 								<listOptionValue builtIn="false" value="CC26XX"/>
 								<listOptionValue builtIn="false" value="Display_DISABLE_ALL"/>
@@ -403,6 +403,14 @@
 							<tool id="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.396630815" name="XDCtools" superClass="com.ti.rtsc.buildDefinitions.XDC_3.16.tool.1101180738"/>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="com.ti.ccstudio.buildDefinitions.TMS470.Default.1401462585.755764661.1076982119" name="PDMCC26XX_util.c" rcbsApplicability="disable" resourcePath="Drivers/PDMCC26XX_util.c" toolsToInvoke="com.ti.ccstudio.buildDefinitions.TMS470_5.2.exe.compilerDebug.2146151140.1541322777">
+						<tool id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.exe.compilerDebug.2146151140.1541322777" name="ARM Compiler" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.exe.compilerDebug.2146151140">
+							<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__C_SRCS.1813835419" name="C Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__C_SRCS"/>
+							<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__CPP_SRCS.1233299245" name="C++ Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__CPP_SRCS"/>
+							<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__ASM_SRCS.1586388548" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__ASM_SRCS"/>
+							<inputType id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__ASM2_SRCS.2093728737" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.compiler.inputType__ASM2_SRCS"/>
+						</tool>
+					</fileInfo>
 					<folderInfo id="com.ti.ccstudio.buildDefinitions.TMS470.Default.1401462585.755764661.245523767" name="/" resourcePath="PROFILES">
 						<toolChain id="com.ti.ccstudio.buildDefinitions.TMS470_5.2.exe.DebugToolchain.297004622" name="TI Build Tools" superClass="com.ti.ccstudio.buildDefinitions.TMS470_5.2.exe.DebugToolchain" unusedChildren="">
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.1722623329.1866691174" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.1722623329"/>

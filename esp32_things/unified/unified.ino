@@ -15,9 +15,9 @@
 #define EXCLUDE_IMU   // accelerometer and gyroscope only
 
 // put sensors to be included here
-#undef EXCLUDE_AUDIO
+//#undef EXCLUDE_AUDIO
 //#undef EXCLUDE_IMU
-//#undef EXCLUDE_MOTION
+#undef EXCLUDE_MOTION
 //#undef EXCLUDE_RSSI
    
 // definitions
@@ -84,7 +84,6 @@ hw_timer_t* timer0 = NULL;
 hw_timer_t* timer1 = NULL;
 hw_timer_t* timer2 = NULL;
 hw_timer_t* timer3 = NULL;
-
 // defining semaphores
 // for notifications handling
 BaseType_t pxMicTaskWoken;
@@ -285,6 +284,9 @@ void setup(){
       USE_SERIAL.flush();
       delay(1000);
   }
+
+  // limiting wifi transmission power
+  // esp_wifi_set_max_tx_power(56);
 
   //wifiMulti.addAP("experiments", "inception");
   wifiMulti.addAP("experiments", "inception");
@@ -495,7 +497,7 @@ void setup(){
   void intMicTask(void * parameter){
     timer0 = timerBegin(0, 40, true);
     timerAttachInterrupt(timer0, &onTimerMic, true);
-    timerAlarmWrite(timer0, 125, true);
+    timerAlarmWrite(timer0, 250, true);
     timerAlarmEnable(timer0);
 
     vTaskSuspend(NULL);
