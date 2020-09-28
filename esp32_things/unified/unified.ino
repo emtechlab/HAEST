@@ -7,6 +7,7 @@
 #include <ESP.h>
 #include <esp_task_wdt.h>
 #include <SparkFunMPU9250-DMP.h>
+#include <driver/adc.h>
 
 /*Defining macros to exclude sensing modalities*/
 #define EXCLUDE_MOTION
@@ -40,6 +41,8 @@ const char * host = "10.42.0.1";
   uint64_t baseTimeMic;
   uint8_t countAudioFrame=0;
   uint16_t countMic=0;
+  uint16_t sub_count=0;
+  uint32_t temp_audio=0;
   uint16_t mic_data[16640];
   unsigned char mic_http[33280];
 #endif
@@ -107,34 +110,52 @@ TaskHandle_t httpImu;
 #ifndef EXCLUDE_AUDIO
   void IRAM_ATTR onTimerMic() {    
 
-    // mic data
-    uint16_t audio = analogRead(A6);
-    // time stamp
-    uint64_t tim64 = esp_timer_get_time();
+    uint16_t audio;
+    uint64_t tim64;
+
+    /*if(sub_count < 24){
+      //temp_audio += analogRead(A6);
+      temp_audio += adc1_get_raw(ADC1_CHANNEL_6);
+      sub_count += 1;
+    }*/
+
+    //else{
+
+      //temp_audio += analogRead(A6);
+      //temp_audio += adc1_get_raw(ADC1_CHANNEL_6);
+      audio = adc1_get_raw(ADC1_CHANNEL_6);
+      tim64 = esp_timer_get_time();
+      //sub_count += 1;
+      //audio = temp_audio/(sub_count+1);
+      //sub_count = 0;
+      //temp_audio = 0;
+ 
+      // time stamp
+      // uint64_t tim64 = esp_timer_get_time();
     
-    // copy data
-    if(countMic%256 == 0){
-      baseTimeMic = tim64;
-      //if(countMic%256 <= 32){
+      // copy data
+      if(countMic%256 == 0){
+        baseTimeMic = tim64;
+        //if(countMic%256 <= 32){
         mic_data[(countMic/256)*3+MIC_DATA*countMic] = audio;
         mic_data[(countMic/256)*3+MIC_DATA*countMic+4] = tim64 & 0xFFFF;
         mic_data[(countMic/256)*3+MIC_DATA*countMic+3] = (tim64>>16) & 0xFFFF;
         mic_data[(countMic/256)*3+MIC_DATA*countMic+2] = (tim64>>32) & 0xFFFF;
         mic_data[(countMic/256)*3+MIC_DATA*countMic+1] = (tim64>>48) & 0xFFFF;
-      //}
+        //}
 
-    }else{
-      tim64 = baseTimeMic - tim64;
-      //USE_SERIAL.printf("Audio: %d ", countMic%256);
-      //if(countMic%256 <= 32){
+      }else{
+        tim64 = baseTimeMic - tim64;
+        //USE_SERIAL.printf("Audio: %d ", countMic%256);
+        //if(countMic%256 <= 32){
         mic_data[((countMic/256)+1)*3+MIC_DATA*countMic] = audio;
         //USE_SERIAL.printf("Audio here: %d\n", mic_data[((countMic%256)+1)*3+MIC_DATA*countMic]);
         mic_data[((countMic/256)+1)*3+MIC_DATA*countMic+1] = (tim64) & 0xFFFF;
-      //}
-    }
-    countMic ++;
+        //}
+      }
+      countMic ++;
 
-    if(countMic%8000 == 0){
+      if(countMic%8000 == 0){
         USE_SERIAL.printf("Audio: %d\n", audio);
         memcpy(mic_http, mic_data, 33280);        
         mic_http[33279] = countAudioFrame;
@@ -150,8 +171,8 @@ TaskHandle_t httpImu;
         if (pxMicTaskWoken == pdTRUE){
             portYIELD_FROM_ISR();
         }
-    }
-
+      }
+    //}
   }
 #endif
 
@@ -159,7 +180,8 @@ TaskHandle_t httpImu;
   void IRAM_ATTR onTimerMotion() {    
 
     // mic data
-    uint16_t motion = analogRead(A7);
+    //uint16_t motion = analogRead(A7);
+    uint16_t motion = adc1_get_raw(ADC1_CHANNEL_7);
     // time stamp
     uint64_t tim64 = esp_timer_get_time();
     
@@ -188,7 +210,7 @@ TaskHandle_t httpImu;
     //    USE_SERIAL.printf("Motion: %d\n", motion);
     //if(motion >= 670)
     //    USE_SERIAL.printf("Motion: %d\n", motion);
-    if(countMotion%500 == 0){
+    if(countMotion%5 == 0){
         USE_SERIAL.printf("Motion: %d\n", motion);
         memcpy(motion_http, motion_data, 8320);        
         motion_http[8319] = countMotionFrame;
@@ -288,12 +310,32 @@ void setup(){
   // limiting wifi transmission power
   // esp_wifi_set_max_tx_power(56);
 
+  //DO NOT TOUCH
+  //  This is here to force the ESP32 to reset the WiFi and initialise correctly.
+  Serial.print("WIFI status = ");
+  Serial.println(WiFi.getMode());
+  WiFi.disconnect(true);
+  delay(1000);
+  WiFi.softAPdisconnect(true);           // disconnects AP Mode 
+  delay(1000);
+  WiFi.mode(WIFI_STA);
+  delay(1000);
+  Serial.print("WIFI status = ");
+  Serial.println(WiFi.getMode());
+  // End silly stuff !!!
+
   //wifiMulti.addAP("experiments", "inception");
   wifiMulti.addAP("experiments", "inception");
   // wait for connection here
   USE_SERIAL.printf("Waiting for wifi connection ...\n");
   while(wifiMulti.run() != WL_CONNECTED);
   USE_SERIAL.printf("Connected to wifi successfully ...\n");
+
+  // configuring ADC
+  adc1_config_channel_atten(ADC1_CHANNEL_6, ADC_ATTEN_DB_11);    // setting adc1 channel 6 @ atten 11dB
+  adc1_config_width(ADC_WIDTH_BIT_9);                           // setting adc1 width @ 12 bits
+  adc1_config_channel_atten(ADC1_CHANNEL_7, ADC_ATTEN_DB_11);    // setting adc1 channel 6 @ atten 11dB
+  adc1_config_width(ADC_WIDTH_BIT_12);                           // setting adc1 width @ 12 bits
 
   #ifndef EXCLUDE_IMU
     // setting up IMU
@@ -471,7 +513,9 @@ void setup(){
       if((WiFi.status() == WL_CONNECTED)) {
       
         uint64_t tim64 = esp_timer_get_time();
+        USE_SERIAL.printf("Wifi Status: %d\n", (WiFi.status() == WL_CONNECTED));
         int httpCode = clientMotion.write((uint8_t *)(motion_http), 8320);
+        USE_SERIAL.printf("Wifi Status: %d\n", (WiFi.status() == WL_CONNECTED));
         // httpCode will be negative on error
         tim64 = esp_timer_get_time() - tim64;
         tim64 /= 1000;

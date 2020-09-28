@@ -122,7 +122,25 @@ def decode_aud_esp(filename, data_rate):
                     # print (i, j, k, count)
                     break
 
+                base = 234
                 data_point = int.from_bytes(stream[k:k+2][::-1], 'big')
+                if data_point > base+5 and data_point <= base+15:
+                    data_point -= 10
+                elif data_point > base+15 and data_point <= base+25:
+                    data_point -= 20
+                if data_point > base+25 and data_point <= base+35:
+                    data_point -= 30
+                elif data_point > base+35:
+                    data_point -= 40
+                elif data_point < base-5 and data_point >= base-15:
+                    data_point += 10
+                elif data_point < base-15 and data_point >= base-25:
+                    data_point += 20
+                elif data_point < base-25 and data_point >= base-35:
+                    data_point += 30
+                elif data_point < base-35:
+                    data_point += 40
+
                 off_time = int.from_bytes(stream[k+2:k+4][::-1], 'big', signed=True)
                 #count += 1
 
@@ -212,21 +230,21 @@ def decode_opt_esp(filename, data_rate):
 
 def main():
 
-    '''filename = '../../data-time-sync/mot_test15'
-    data_rate = 1000
-    data = decode_mot_esp(filename, data_rate)'''
+    filename = '../../data-time-sync/aud_test34'
+    data_rate = 800
+    data = decode_aud_esp(filename, data_rate)
 
-    filename = '../../data-time-sync/data_opt_esp_10_02_1013'
-    data_rate = 10
-    data = decode_opt_esp(filename, data_rate)
+    filename2 = '../../data-time-sync/aud_test21'
+    data_rate2 = 800
+    data2 = decode_aud_esp(filename2, data_rate2)
 
     #filename2 = '../../data-time-sync/aud_test19'
     #data2 = decode_aud_esp(filename2, data_rate)
 
     plt.figure()
     #plt.subplot(2,1,1)
-    plt.plot(range(len(data[0])), data[0], 'g+')
-    #plt.plot(scale_to_sec(data[1]), data[0], 'g+')
+    #plt.plot(range(len(data[0])), data[0], 'gx')
+    plt.plot(scale_to_sec(data[1]), data[0], 'g+')
     #plt.subplot(2,1,2)
     #plt.plot(range(len(data2[0])), data2[0], 'rx')
     plt.show()

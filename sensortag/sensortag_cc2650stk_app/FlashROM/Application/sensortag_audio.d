@@ -253,6 +253,23 @@ Application/sensortag_audio.obj: C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/
 Application/sensortag_audio.obj: C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbios/knl/Semaphore.h
 Application/sensortag_audio.obj: C:/ti/ccsv6/tools/compiler/arm_15.12.3.LTS/include/string.h
 Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Assert.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/ISystemSupport.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IGateProvider.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_SupportProxy.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/ISystemSupport.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_Module_GateProxy.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IInstance.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IGateProvider.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_SupportProxy.h
+Application/sensortag_audio.obj: C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_Module_GateProxy.h
 Application/sensortag_audio.obj: C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/mw/sensors/SensorUtil.h
 Application/sensortag_audio.obj: C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbios/knl/Clock.h
 Application/sensortag_audio.obj: C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbios/knl/Task.h
@@ -510,6 +527,23 @@ C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbi
 C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbios/knl/Semaphore.h: 
 C:/ti/ccsv6/tools/compiler/arm_15.12.3.LTS/include/string.h: 
 C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/System.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Assert.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/ISystemSupport.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IModule.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IGateProvider.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_SupportProxy.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/ISystemSupport.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_Module_GateProxy.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/Types.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IInstance.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/IGateProvider.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_SupportProxy.h: 
+C:/ti/xdctools_3_32_00_06_core/packages/xdc/runtime/package/System_Module_GateProxy.h: 
 C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/tidrivers_cc13xx_cc26xx_2_20_01_10/packages/ti/mw/sensors/SensorUtil.h: 
 C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbios/knl/Clock.h: 
 C:/ti/tirtos_cc13xx_cc26xx_2_20_01_08/products/bios_6_46_01_38/packages/ti/sysbios/knl/Task.h: 
