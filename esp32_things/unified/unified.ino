@@ -32,7 +32,9 @@
 // wifi connection handle
 WiFiMulti wifiMulti;
 const uint16_t port = 8090;
-const char * host = "10.42.0.1";
+//old setting
+//const char * host = "10.42.0.1";
+const char * host = "192.168.1.254";
 
 #ifndef EXCLUDE_AUDIO
   //Mic struct
@@ -210,7 +212,7 @@ TaskHandle_t httpImu;
     //    USE_SERIAL.printf("Motion: %d\n", motion);
     //if(motion >= 670)
     //    USE_SERIAL.printf("Motion: %d\n", motion);
-    if(countMotion%5 == 0){
+    if(countMotion%500 == 0){
         USE_SERIAL.printf("Motion: %d\n", motion);
         memcpy(motion_http, motion_data, 8320);        
         motion_http[8319] = countMotionFrame;
@@ -245,7 +247,7 @@ TaskHandle_t httpImu;
   void IRAM_ATTR onTimerImu() {    
 
     // IMU data
-    uint64_t tim64;
+    /*uint64_t tim64;
     if (imu.dataReady()){
         imu.update();
         tim64 = esp_timer_get_time();
@@ -285,14 +287,14 @@ TaskHandle_t httpImu;
             countImuFrame = 0;  
         }else{
           countImuFrame ++;
-        }
+        }*/
         
         pxImuTaskWoken = pdFALSE;
         vTaskNotifyGiveFromISR(httpImu, &pxImuTaskWoken);
         if (pxImuTaskWoken == pdTRUE){
             portYIELD_FROM_ISR();
         }
-    }
+    //}
 }
 #endif
 
@@ -324,8 +326,9 @@ void setup(){
   Serial.println(WiFi.getMode());
   // End silly stuff !!!
 
+  //old settings
   //wifiMulti.addAP("experiments", "inception");
-  wifiMulti.addAP("experiments", "inception");
+  wifiMulti.addAP("NETGEAR46", "politehippo981");
   // wait for connection here
   USE_SERIAL.printf("Waiting for wifi connection ...\n");
   while(wifiMulti.run() != WL_CONNECTED);
@@ -373,6 +376,9 @@ void setup(){
     // creating socket connections for streaming
     while (!clientMotion.connect(host, port)) {
         USE_SERIAL.println("Connection to host failed from MOTION");
+        if(WiFi.status() != WL_CONNECTED){
+          USE_SERIAL.println(" because Wifi not connected.");        
+        }
     }
   #endif
 
@@ -552,7 +558,7 @@ void setup(){
   void intMotionTask(void * parameter){
     timer1 = timerBegin(1, 80, true);
     timerAttachInterrupt(timer1, &onTimerMotion, true);
-    timerAlarmWrite(timer1, 100000, true);
+    timerAlarmWrite(timer1, 1000, true);
     timerAlarmEnable(timer1);
 
     vTaskSuspend(NULL);
@@ -571,28 +577,65 @@ void setup(){
 
     for(;;){ 
 
-      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);                            
-      USE_SERIAL.printf("IMU triggered by interrupt: %d\n", countImuFrame);
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+
+      uint64_t tim64;
+      if (imu.dataReady()){
+        imu.update();
+        tim64 = esp_timer_get_time();
+        imu_data[IMU_DATA*countImu] = imu.ax;
+        imu_data[IMU_DATA*countImu+1] = imu.ay;
+        imu_data[IMU_DATA*countImu+2] = imu.az;
+        imu_data[IMU_DATA*countImu+3] = imu.gx;
+        imu_data[IMU_DATA*countImu+4] = imu.gy;
+        imu_data[IMU_DATA*countImu+5] = imu.gz;
+      }else{
+        USE_SERIAL.printf("Values were not available ... %d\n", countImu);
+        memset(&(imu_data[IMU_DATA*countImu]), 0, 12);
+        tim64 = esp_timer_get_time();
+      }
+
+      imu_data[IMU_DATA*countImu+9] = tim64 & 0xFFFF;
+      imu_data[IMU_DATA*countImu+8] = (tim64>>16) & 0xFFFF;
+      imu_data[IMU_DATA*countImu+7] = (tim64>>32) & 0xFFFF;
+      imu_data[IMU_DATA*countImu+6] = (tim64>>48) & 0xFFFF;
     
-      // wait for WiFi connection
-      if((WiFi.status() == WL_CONNECTED)) {
+      countImu ++;
+    
+      if(countImu%2000 == 0){
+        USE_SERIAL.printf("IMU: %d, %d, %d\n", imu.ax, imu.ay, imu.az);
+        memcpy(imu_http, imu_data, 40000);        
+        imu_http[40000] = countImuFrame;
+        countImu = 0;
+        if(countImuFrame == 255){
+            countImuFrame = 0;  
+        }else{
+          countImuFrame ++;
+        }
+                                  
+        USE_SERIAL.printf("IMU triggered by interrupt: %d\n", countImuFrame);
+    
+        // wait for WiFi connection
+        if((WiFi.status() == WL_CONNECTED)) {
       
-        uint64_t tim64 = esp_timer_get_time();
-        int httpCode = clientImu.write((uint8_t *)(imu_http), 40001);
-        // httpCode will be negative on error
-        tim64 = esp_timer_get_time() - tim64;
-        tim64 /= 1000;
-        uint32_t tim32 = tim64 & 0xFFFFFFFF;
-        if(httpCode > 0) {
+          //uint64_t tim64 = esp_timer_get_time();
+          tim64 = esp_timer_get_time();
+          int httpCode = clientImu.write((uint8_t *)(imu_http), 40001);
+          // httpCode will be negative on error
+          tim64 = esp_timer_get_time() - tim64;
+          tim64 /= 1000;
+          uint32_t tim32 = tim64 & 0xFFFFFFFF;
+          if(httpCode > 0) {
             USE_SERIAL.printf("[HTTP] POST... code: %d in %d ms\n", httpCode, tim32);
+          }
+          else{
+            USE_SERIAL.printf("[HTTP] POST timeout: %d\n", tim32);
+          }
+          USE_SERIAL.printf("Sent ...\n");
         }
         else{
-          USE_SERIAL.printf("[HTTP] POST timeout: %d\n", tim32);
+          USE_SERIAL.print("Exiting HTTP ....\n");
         }
-        USE_SERIAL.printf("Sent ...\n");
-      }
-      else{
-        USE_SERIAL.print("Exiting HTTP ....\n");
       }
       portYIELD();
     }
@@ -667,7 +710,7 @@ void setup(){
   void intImuTask(void * parameter){
     timer2 = timerBegin(2, 80, true);
     timerAttachInterrupt(timer2, &onTimerImu, true);
-    timerAlarmWrite(timer2, 5000, true);
+    timerAlarmWrite(timer2, 4000, true);
     timerAlarmEnable(timer2);
 
     vTaskSuspend(NULL);
